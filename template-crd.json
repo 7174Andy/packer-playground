@@ -1,0 +1,78 @@
+{
+    "builders": [
+        {
+            "type": "googlecompute",
+            "account_file": "sandbox-408020-a3a4e63a9039.json",
+            "project_id": "vmassign-dev",
+            "source_image": "c0-deeplearning-common-cu113-v20230925-debian-10",
+            "zone": "us-west1-b",
+            "ssh_username": "tutorial",
+            "image_name": "linux-pilot-sleap-gui-crd-pubsub-database-inuse-5",
+            "network": "default",
+            "disk_size": 50,
+            "disk_type": "pd-standard",
+            "service_account_email": "packer-image-creator@vmassign-dev.iam.gserviceaccount.com",
+            "machine_type": "e2-medium",
+            "scopes": [
+                "https://www.googleapis.com/auth/devstorage.read_only",
+                "https://www.googleapis.com/auth/logging.write",
+                "https://www.googleapis.com/auth/monitoring.write",
+                "https://www.googleapis.com/auth/servicecontrol",
+                "https://www.googleapis.com/auth/service.management.readonly",
+                "https://www.googleapis.com/auth/trace.append"
+            ]
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sudo apt-get remove -y unattended-upgrades",
+                "sudo -u tutorial git clone https://github.com/talmolab/cosyne_vm.git",
+                "cd cosyne_vm",
+                "pip3 install --upgrade pip",
+                "pip3 install -r requirements.txt",
+                "cd .."
+            ]
+        },
+        {
+            "type": "shell",
+            "execute_command": "sudo bash -c '{{.Vars}} {{.Path}}'",
+            "scripts": [
+                "./install-crd.sh"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo apt-get install -y xvfb xserver-xorg-video-dummy xbase-clients python3-packaging",
+                "wget http://mirrors.edge.kernel.org/ubuntu/pool/main/g/gcc-10/gcc-10-base_10-20200411-0ubuntu1_amd64.deb",
+                "wget http://mirrors.xmission.com/ubuntu/pool/main/g/gcc-10/libgcc-s1_10-20200411-0ubuntu1_amd64.deb",
+                "sudo dpkg -i gcc-10-base_10-20200411-0ubuntu1_amd64.deb",
+                "sudo dpkg -i libgcc-s1_10-20200411-0ubuntu1_amd64.deb"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb",
+                "sudo dpkg -i chrome-remote-desktop_current_amd64.deb",
+                "DEBIAN_FRONTEND=noninteractive sudo apt-get install --assume-yes --fix-broken",
+                "sudo DEBIAN_FRONTEND=noninteractive apt install --assume-yes xfce4 desktop-base dbus-x11 xscreensaver"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo bash -c 'echo \"exec /etc/X11/Xsession /usr/bin/xfce4-session\" > /etc/chrome-remote-desktop-session'",
+                "sudo systemctl disable lightdm.service"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev --assume-yes --fix-broken"
+            ]
+        }
+    ]
+}
