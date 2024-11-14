@@ -1,4 +1,4 @@
-# Packerr Templates
+# Packer Templates
 
  Packer template to create Google Cloud Virtual Machine images for use on different cloud providers.
 
